@@ -1,0 +1,22 @@
+﻿id,source,publisher_and_date,data_used,reliability,url
+1,GBD 2023（Global Burden of Disease Study 2023），三篇 capstone 论文载于 The Lancet,IHME / 2025-10-12,全球 375 种疾病负担、患病与死亡排序、DALY 前十,3,https://www.healthdata.org/announcing-launch-gbd-2023-study-results
+2,GBD 2023 Headache Collaborators，Lancet Neurology 2025,IHME + NTNU / 2025-11,头痛障碍 29 亿（年龄标化 34.6%）、偏头痛 11 亿、YLD 4580 万,3,https://www.healthdata.org/news-events/newsroom/news-releases/headache-disorders-affect-3-billion-people-worldwide-nearly-one
+3,GBD 2023 口腔健康专题（GOHAP 进展评估）,2025,全球口腔疾病 37.3 亿（2019 年 36.2 亿）,3,
+4,WHO Global Health Estimates 2023,WHO / 2026-10-02,全球十大死因及死亡数（IHD 950 万、卒中 680 万、COPD 360 万…）、全球死亡 6100 万,3,https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death
+5,WHO 世界听力报告 / 耳聋事实清单,WHO / 2021–2024,全球听力损失 15 亿、致残性 4.3 亿,3,https://www.who.int/features/factfiles/deafness/zh/
+6,WHO《世界视力报告》,WHO / 2019,全球视力损害或失明 ≥22 亿,3,
+7,GBD 2023 精神障碍专题（The Lancet 2026-05-21）,UQ + IHME / 2026,全球精神障碍 11.7 亿、占 YLD 17.3%、DALY 1.71 亿,3,
+8,IDF《全球糖尿病地图》第 11 版,国际糖尿病联盟 / 2025,全球 20–79 岁糖尿病 5.89 亿，43% 未确诊,3,
+9,WHO 高血压事实清单,WHO / 2023,全球 30–79 岁高血压 14 亿,3,
+10,GBD 2020 下背痛专题（Lancet Rheumatology 2023）,2023,全球下背痛 6.19 亿,2,
+11,《中国心血管健康与疾病报告 2025》，国家心血管病中心；解读见王增武、刘明波，《中国预防医学杂志》2026 年第 9 期,国家心血管病中心 / 2026-06,心血管病 3.3 亿（含高血压）、GBD 口径 1.338 亿、高血压 2.45 亿、卒中 1300 万、冠心病 1139 万、心衰 890 万、房颤 487 万、下肢动脉疾病 4530 万、高血压患病率 31.6%、控制率 12.9%、糖尿病患病率 12.4%、血脂异常 38.1%、超重 34.6%／肥胖 17.8%,3,https://www.nccd.org.cn/
+12,《中国全国及省级糖尿病患病率与非致命负担，2005–2023，2050 预测》，Military Medical Research 2025;12:28,中国疾控中心慢病中心 周脉耕等 / 2025-06,中国糖尿病 2.33 亿、年龄标化 13.67%、31 省完整患病率、区域格局,3,https://mmrjournal.biomedcentral.com/
+13,《中国高血压调查（CHS 2012–2015）》，Circulation 2018；省级数据见《中国心血管病报告 2018》表 2-1-2,高润霖、王增武等 / 2018,省级高血压加权患病率、全国 23.2%、高血压前期 4.35 亿,3,
+14,《第四次全国口腔健康流行病学调查报告》,国家卫健委 / 2015–2017,35–44 岁牙周健康率 9.1%、龋患率 89.0%,3,
+15,"Wang C, et al. The Lancet 2018（中国成人肺部健康研究）",2018,中国 20 岁以上 COPD 9990 万、40 岁以上患病率 13.7%,3,
+16,"Huang Y, et al. Lancet Psychiatry 2019（中国精神卫生调查）",2019,焦虑障碍 4.1%（5781 万）、抑郁障碍 3.4%（4794 万）,3,
+17,"Han B, et al. Journal of the National Cancer Center 2024（中国 2022 年癌症统计）",国家癌症中心 / 2024,年新发 482.47 万、死亡 257.42 万,3,
+18,GBD 2023 中国听力损失负担分析（CNKI 收录，2026）,2026,中国听力损失 4.84 亿、DALY 1413 万年、21.6% 归因职业噪声,2,
+19,中国 CDC Weekly：中国 60 岁以上人群死亡与伤残负担 1990–2023,中国疾控中心 / 2025-12,老年人群死因与 YLD 排序、痴呆死亡率 AAPC 1.76,3,https://weekly.chinacdc.cn/
+20,《中国眼健康白皮书》、国家卫健委近视防控发布会,国家卫健委 / 2020,儿童青少年总体近视率 52.7%；全人群近视数为推算,1,
+21,《中国幽门螺杆菌感染防控》白皮书,2023,感染率约 44%,2,

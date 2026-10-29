@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>疾病负担排行 · 全球 / 中国 / 省域</title>
+<style>
+  :root{
+    --bg:#faf8f5;
+    --paper:#ffffff;
+    --ink:#1c1b19;
+    --ink-2:#4a4642;
+    --ink-3:#8a837c;
+    --rule:#e3ded6;
+    --rule-2:#efeae3;
+    --accent:#a63d2f;
+    --accent-soft:#f3e4e0;
+    --blue:#2c4a5e;
+    --blue-soft:#e4ebf0;
+    --amber:#b07d28;
+    --amber-soft:#f6ecd9;
+    --green:#4a6b52;
+    --mono:"SF Mono","JetBrains Mono","Menlo","Consolas",monospace;
+    --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    font-feature-settings:"tnum";
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px 100px}
+
+  /* ---------- header ---------- */
+  header{padding:72px 0 40px;border-bottom:2px solid var(--ink)}
+  .kicker{
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:20px;
+  }
+  h1{
+    font-size:clamp(30px,4.6vw,50px);line-height:1.15;font-weight:800;
+    letter-spacing:-.02em;margin-bottom:20px;
+  }
+  h1 span{color:var(--accent)}
+  .standfirst{
+    font-size:17px;color:var(--ink-2);max-width:62ch;line-height:1.75;
+  }
+  .meta{
+    margin-top:28px;display:flex;flex-wrap:wrap;gap:8px 24px;
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:.03em;
+  }
+
+  /* ---------- sections ---------- */
+  section{padding-top:64px}
+  h2{
+    font-size:23px;font-weight:750;letter-spacing:-.01em;margin-bottom:8px;
+    display:flex;align-items:baseline;gap:14px;
+  }
+  h2 .num{
+    font-family:var(--mono);font-size:12px;color:var(--accent);
+    letter-spacing:.1em;font-weight:400;
+  }
+  .sub{color:var(--ink-3);font-size:14px;margin-bottom:28px;max-width:70ch}
+  h3{font-size:16px;font-weight:700;margin:36px 0 14px;color:var(--ink)}
+  p{font-size:15px;color:var(--ink-2);margin-bottom:14px;max-width:74ch}
+  p strong{color:var(--ink);font-weight:700}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(166,61,47,.3)}
+  a:hover{border-bottom-color:var(--accent)}
+
+  /* ---------- 口径 cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+  .card{background:var(--paper);padding:20px 18px}
+  .card .tag{
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--accent);
+    text-transform:uppercase;margin-bottom:8px;
+  }
+  .card h4{font-size:15px;font-weight:700;margin-bottom:6px}
+  .card p{font-size:12.5px;color:var(--ink-3);margin:0;line-height:1.6}
+
+  /* ---------- ranking table ---------- */
+  .rank{border-top:1px solid var(--rule)}
+  .row{
+    display:grid;grid-template-columns:38px 1fr 118px 1fr;align-items:center;
+    gap:16px;padding:11px 4px;border-bottom:1px solid var(--rule-2);
+  }
+  .row.head{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);
+    text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:8px;
+  }
+  .pos{font-family:var(--mono);font-size:12px;color:var(--ink-3);text-align:right}
+  .pos.top{color:var(--accent);font-weight:700}
+  .name{font-size:14.5px;font-weight:600;line-height:1.35}
+  .name em{font-style:normal;font-weight:400;font-size:12px;color:var(--ink-3);display:block;margin-top:1px}
+  .val{font-family:var(--mono);font-size:15px;font-weight:700;text-align:right;letter-spacing:-.02em}
+  .val small{font-weight:400;font-size:10.5px;color:var(--ink-3);margin-left:3px}
+  .bar{height:9px;background:var(--rule-2);position:relative;border-radius:1px}
+  .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:1px}
+  .bar i.red{background:var(--accent)}
+  .bar i.amber{background:var(--amber)}
+  .bar i.soft{background:#8fa5b3}
+
+  /* ---------- tier block ---------- */
+  .tier{
+    border-left:3px solid var(--accent);padding:2px 0 2px 20px;margin:34px 0 8px;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  }
+  .tier .lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--accent)}
+  .tier .txt{font-size:17px;font-weight:750}
+  .tier .rng{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+
+  /* ---------- province grid ---------- */
+  .prov{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));
+    gap:0;background:var(--paper);border:1px solid var(--rule);
+    border-radius:2px;overflow:hidden;margin-top:8px;
+  }
+  .prov div{background:var(--paper);padding:10px 10px 11px;position:relative;border-right:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2)}
+  .prov .pname{font-size:12.5px;color:var(--ink-2);margin-bottom:4px}
+  .prov .pval{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.02em}
+  .prov .r{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);position:absolute;top:10px;right:10px}
+
+  /* ---------- callout ---------- */
+  .call{
+    background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--amber);
+    padding:18px 22px;margin:26px 0;border-radius:2px;
+  }
+  .call .hd{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}
+  .call p{font-size:14px;margin:0;color:var(--ink-2)}
+  .call p + p{margin-top:10px}
+
+    /* ---------- data downloads ---------- */
+  table.src td.fn{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+  table.src td.fn a{color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor}
+  table.src td.fn a:hover{opacity:.7}
+  table.src td.sz{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right;white-space:nowrap}
+  table.src td.rows{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right;white-space:nowrap}
+
+  /* ---------- source table ---------- */
+  table.src{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  table.src th{
+    text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+    color:var(--ink-3);text-transform:uppercase;font-weight:400;
+    padding:8px 10px 8px 0;border-bottom:1px solid var(--rule);white-space:nowrap;
+  }
+  table.src td{padding:9px 10px 9px 0;border-bottom:1px solid var(--rule-2);vertical-align:top;color:var(--ink-2);line-height:1.5}
+  table.src td.n{font-family:var(--mono);color:var(--ink-3);width:26px}
+  table.src td.q{white-space:nowrap;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+
+  /* ---------- stars ---------- */
+  .st{font-size:10px;letter-spacing:1px;color:var(--accent);white-space:nowrap}
+  .st i{font-style:normal;opacity:.25}
+
+  .legend{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:11.5px;color:var(--ink-3);margin-top:16px;font-family:var(--mono)}
+
+  ul.pts{list-style:none;margin:14px 0 0}
+  ul.pts li{
+    font-size:14.5px;color:var(--ink-2);padding:10px 0 10px 22px;position:relative;
+    border-bottom:1px solid var(--rule-2);max-width:76ch;
+  }
+  ul.pts li::before{content:"—";position:absolute;left:0;color:var(--accent)}
+  ul.pts li b{color:var(--ink);font-weight:700}
+
+  footer{margin-top:70px;padding-top:26px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-3);line-height:1.8}
+  footer b{color:var(--ink-2)}
+
+  @media(max-width:640px){
+    .wrap{padding:0 16px 70px}
+    header{padding:44px 0 28px}
+    .row{grid-template-columns:26px 1fr 82px;gap:10px}
+    .row .bar{display:none}
+    .val{font-size:13.5px}
+    .name{font-size:13px}
+  }
+  @media print{
+    body{background:#fff}
+    section{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">DATA BRIEF · 疾病负担横截面</div>
+  <h1>谁最多，谁最致命<br><span>全球 / 中国 / 省域</span> 疾病人数排行</h1>
+  <p class="standfirst">
+    同一个问题“哪种病最多”，换一种口径就换一个世界。按<b>现患人数</b>排，榜首是口腔疾病、头痛、听力损失这类“不致死但极普遍”的病；
+    按<b>死亡人数</b>排，榜首是缺血性心脏病、卒中、慢阻肺。把两张表叠起来看，才是真实的疾病谱。
+  </p>
+  <div class="meta">
+    <span>数据基准：GBD 2023 / WHO GHE 2023 / 中国心血管报告 2025（截至 2026-10 均为各机构最新版）</span>
+    <span>编制：2026-10-29</span>
+    <span>口径：现患人数为主，死亡顺位并列</span>
+  </div>
+</header>
+
+<!-- ======================= 1. 口径 ======================= -->
+<section id="note">
+  <h2><span class="num">01</span>先定口径，否则排行毫无意义</h2>
+  <p class="sub">“病人数”至少四种算法，结果差几十倍。本页默认用<b>现患人数（prevalence）</b>，并在死亡部分单独给出<b>死亡顺位</b>。</p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="tag">Prevalence</div>
+      <h4>现患人数</h4>
+      <p>某时点“正在患病”的总人数。慢性病会累积，所以数字最大。本页主榜即此口径。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Incidence</div>
+      <h4>新发病例</h4>
+      <p>一年内新发生的病例。上呼吸道感染一年 128 亿人次，因为一年可反复感染多次，会超过总人口。</p>
+    </div>
+    <div class="card">
+      <div class="tag">Deaths</div>
+      <h4>死亡人数</h4>
+      <p>最硬的指标，但只反映“致死性”，完全不反映“有多少人在受折磨”。</p>
+    </div>
+    <div class="card">
+      <div class="tag">YLD / DALY</div>
+      <h4>健康损失</h4>
+      <p>把“带病活着”折算成健康寿命损失。偏头痛患病人数少于紧张型头痛，但 YLD 占头痛总负担约 90%。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 2. 全球患病 ======================= -->
+<section id="global">
+  <h2><span class="num">02</span>全球：按现患人数排（2023）</h2>
+  <p class="sub">前列几乎全是<b>非致死性、高患病率、低就诊率</b>的病。这张榜说明的不是“世界病了”，而是“活着的人里，绝大多数带着某种长期不适”。</p>
+
+  <div class="rank">
+    <div class="row head"><div class="pos">#</div><div>疾病 / 病类</div><div class="val" style="text-align:right">人数</div><div>量级</div></div>
+
+    <div class="row"><div class="pos top">1</div>
+      <div class="name">口腔疾病<em>未治疗龋齿、重度牙周炎、无牙颌等</em></div>
+      <div class="val">37.3<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:100%"></i></div></div>
+
+    <div class="row"><div class="pos top">2</div>
+      <div class="name">头痛障碍<em>紧张型头痛约 20 亿 + 偏头痛约 11 亿</em></div>
+      <div class="val">29.0<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:77.7%"></i></div></div>
+
+    <div class="row"><div class="pos top">3</div>
+      <div class="name">视力损害 / 未矫正屈光不正<em>含近视、老视、白内障等</em></div>
+      <div class="val">≥22<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:59%"></i></div></div>
+
+    <div class="row"><div class="pos top">4</div>
+      <div class="name">血红蛋白病与溶血性贫血<em>含地中海贫血、镰状细胞病等遗传性血液病</em></div>
+      <div class="val">21.9<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:58.7%"></i></div></div>
+
+    <div class="row"><div class="pos">5</div>
+      <div class="name">听力损失（任何程度）<em>其中 4.3 亿为致残性听力损失</em></div>
+      <div class="val">15.0<small>亿+</small></div>
+      <div class="bar"><i style="width:40.2%"></i></div></div>
+
+    <div class="row"><div class="pos">6</div>
+      <div class="name">高血压<em>30–79 岁成人</em></div>
+      <div class="val">14.0<small>亿</small></div>
+      <div class="bar"><i style="width:37.5%"></i></div></div>
+
+    <div class="row"><div class="pos">7</div>
+      <div class="name">精神障碍（12 类合计）<em>焦虑、抑郁为主，占全球 YLD 的 17.3%</em></div>
+      <div class="val">11.7<small>亿</small></div>
+      <div class="bar"><i style="width:31.4%"></i></div></div>
+
+    <div class="row"><div class="pos">8</div>
+      <div class="name">下背痛（腰痛）<em>全球第一致残病因之一</em></div>
+      <div class="val">6.19<small>亿</small></div>
+      <div class="bar"><i style="width:16.6%"></i></div></div>
+
+    <div class="row"><div class="pos">9</div>
+      <div class="name">糖尿病<em>20–79 岁，IDF 口径；其中约 43% 未确诊</em></div>
+      <div class="val">5.89<small>亿</small></div>
+      <div class="bar"><i style="width:15.8%"></i></div></div>
+  </div>
+
+  <div class="call">
+    <div class="hd">读法提示</div>
+    <p>前四位是<b>“几乎人人都有”</b>级别：全球 80.5 亿人口，口腔疾病 37.3 亿意味着约 46% 的人有未治疗的口腔问题；头痛 29 亿意味着<b>每 3 人中就有 1 人</b>在某个时点有头痛障碍。</p>
+    <p>这些病在死亡榜上一条都看不到——它们的成本不在殡仪馆，在生产力、在医保门诊、在“活得不太舒服”。</p>
+  </div>
+</section>
+
+<!-- ======================= 3. 全球死亡 ======================= -->
+<section id="gdeath">
+  <h2><span class="num">03</span>全球：按死亡人数排（2023）</h2>
+  <p class="sub">2023 年全球死亡 6100 万，前十大死因占 3300 万（54%）。八大死因是非传染性疾病，占全部死亡的 47%。</p>
+
+  <div class="rank">
+    <div class="row head"><div class="pos">#</div><div>死因</div><div class="val" style="text-align:right">死亡数</div><div>量级</div></div>
+
+    <div class="row"><div class="pos top">1</div>
+      <div class="name">缺血性心脏病<em>占全球全部死亡 16%，2000 年以来增幅最大</em></div>
+      <div class="val">950<small>万</small></div>
+      <div class="bar"><i class="red" style="width:100%"></i></div></div>
+
+    <div class="row"><div class="pos top">2</div>
+      <div class="name">卒中（脑卒中）<em>占全部死亡约 11%</em></div>
+      <div class="val">680<small>万</small></div>
+      <div class="bar"><i class="red" style="width:71.6%"></i></div></div>
+
+    <div class="row"><div class="pos top">3</div>
+      <div class="name">慢性阻塞性肺疾病（COPD）<em>占约 6%</em></div>
+      <div class="val">360<small>万</small></div>
+      <div class="bar"><i class="red" style="width:37.9%"></i></div></div>
+
+    <div class="row"><div class="pos">4</div>
+      <div class="name">下呼吸道感染<em>全球最致命的传染病</em></div>
+      <div class="val">270<small>万</small></div>
+      <div class="bar"><i style="width:28.4%"></i></div></div>
+
+    <div class="row"><div class="pos">5</div>
+      <div class="name">阿尔茨海默病及其他痴呆<em>2000 年排第 19 位，现升至第 5；死者 66% 为女性</em></div>
+      <div class="val">210<small>万</small></div>
+      <div class="bar"><i style="width:22.1%"></i></div></div>
+
+    <div class="row"><div class="pos">6</div>
+      <div class="name">糖尿病<em>死亡数比 2000 年翻倍以上</em></div>
+      <div class="val">200<small>万</small></div>
+      <div class="bar"><i style="width:21.1%"></i></div></div>
+
+    <div class="row"><div class="pos">7</div>
+      <div class="name">气管、支气管及肺癌<em>2000 年 110 万 → 2023 年 180 万</em></div>
+      <div class="val">180<small>万</small></div>
+      <div class="bar"><i style="width:18.9%"></i></div></div>
+
+    <div class="row"><div class="pos">8</div>
+      <div class="name">高血压性心脏病<em>WHO 未在摘要中单列数值</em></div>
+      <div class="val">—</div>
+      <div class="bar"><i class="soft" style="width:14%"></i></div></div>
+
+    <div class="row"><div class="pos">9</div>
+      <div class="name">肾脏疾病<em>2000 年第 17 位 → 第 9 位，死亡数 +86%</em></div>
+      <div class="val">—</div>
+      <div class="bar"><i class="soft" style="width:12%"></i></div></div>
+
+    <div class="row"><div class="pos">10</div>
+      <div class="name">腹泻病<em>仍集中在低收入国家</em></div>
+      <div class="val">—</div>
+      <div class="bar"><i class="soft" style="width:10%"></i></div></div>
+  </div>
+
+  <div class="call">
+    <div class="hd">两张榜的落差就是卫生系统的任务书</div>
+    <p>患病榜第 1 的口腔疾病，在死亡榜上不存在；死亡榜第 1 的缺血性心脏病，患病人数只能排到十名开外（全球冠心病现患约 3 亿量级）。<b>一个国家的卫生支出结构，本质上是在这两张榜之间做配比。</b></p>
+  </div>
+</section>
+
+<!-- ======================= 4. 中国患病 ======================= -->
+<section id="china">
+  <h2><span class="num">04</span>中国：按患病人数排（分层）</h2>
+  <p class="sub">中国的问题不是“病更多”，而是<b>疾病谱压缩</b>：传染病的担子还没完全卸下，代谢病和退行性病已经在同一代人身上叠加。下面按量级分三档，避免把“亿级”和“千万级”混在一张榜里比较。</p>
+
+  <div class="tier"><span class="lab">TIER 1</span><span class="txt">亿级：覆盖 1/4 以上人口</span><span class="rng">≥ 3 亿</span></div>
+  <div class="rank">
+    <div class="row"><div class="pos top">1</div>
+      <div class="name">口腔疾病<em>35–44 岁人群牙周健康率仅 9.1%，即 90.9% 有牙周问题；龋患率 89.0%</em></div>
+      <div class="val">≈10<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:100%"></i></div></div>
+
+    <div class="row"><div class="pos top">2</div>
+      <div class="name">幽门螺杆菌感染<em>感染率约 44%，是胃癌与消化性溃疡的主要归因</em></div>
+      <div class="val">≈6.5<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:65%"></i></div></div>
+
+    <div class="row"><div class="pos top">3</div>
+      <div class="name">近视<em>儿童青少年总体近视率 52.7%（2020）；全人群为估算值</em></div>
+      <div class="val">≈6<small>亿+</small></div>
+      <div class="bar"><i class="red" style="width:60%"></i></div></div>
+
+    <div class="row"><div class="pos top">4</div>
+      <div class="name">听力损失<em>GBD 2023 中国估计，33 年间增长 148.3%</em></div>
+      <div class="val">4.84<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:48.4%"></i></div></div>
+
+    <div class="row"><div class="pos top">5</div>
+      <div class="name">血脂异常<em>患病率 35.6%–40.4%，不同监测年份有波动</em></div>
+      <div class="val">4.0–4.5<small>亿</small></div>
+      <div class="bar"><i class="red" style="width:42.5%"></i></div></div>
+  </div>
+
+  <div class="tier"><span class="lab">TIER 2</span><span class="txt">亿级：1–3 亿</span><span class="rng">1 亿 – 3 亿</span></div>
+  <div class="rank">
+    <div class="row"><div class="pos top">6</div>
+      <div class="name">过敏性鼻炎<em>成人患病率 17.6%，多中心研究估计</em></div>
+      <div class="val">2.48<small>亿</small></div>
+      <div class="bar"><i style="width:100%"></i></div></div>
+
+    <div class="row"><div class="pos top">7</div>
+      <div class="name">高血压<em>≥18 岁患病率 31.6%（2020–2022 调查）；控制率仅 12.9%</em></div>
+      <div class="val">2.45<small>亿</small></div>
+      <div class="bar"><i style="width:98.8%"></i></div></div>
+
+    <div class="row"><div class="pos top">8</div>
+      <div class="name">糖尿病<em>20 岁以上，2023 年；其中约 49.7% 未确诊</em></div>
+      <div class="val">2.33<small>亿</small></div>
+      <div class="bar"><i style="width:94%"></i></div></div>
+
+    <div class="row"><div class="pos">9</div>
+      <div class="name">代谢相关脂肪性肝病<em>成人患病率约 30%，已成中国第一大慢性肝病</em></div>
+      <div class="val">≈2<small>亿</small></div>
+      <div class="bar"><i style="width:80.6%"></i></div></div>
+
+    <div class="row"><div class="pos">10</div>
+      <div class="name">慢性肾脏病<em>成人患病率 10.8%，知晓率仅 14.8%</em></div>
+      <div class="val">1.52<small>亿</small></div>
+      <div class="bar"><i style="width:61.3%"></i></div></div>
+
+    <div class="row"><div class="pos">11</div>
+      <div class="name">骨关节炎（症状性）<em>40 岁以上患病率 18.6%</em></div>
+      <div class="val">1.5<small>亿+</small></div>
+      <div class="bar"><i style="width:60.5%"></i></div></div>
+
+    <div class="row"><div class="pos">12</div>
+      <div class="name">高尿酸血症<em>患病率 13.3%，年轻化明显</em></div>
+      <div class="val">1.2<small>亿</small></div>
+      <div class="bar"><i style="width:48.4%"></i></div></div>
+
+    <div class="row"><div class="pos">13</div>
+      <div class="name">慢性阻塞性肺疾病<em>40 岁以上患病率 13.7%，知晓率不足 10%</em></div>
+      <div class="val">1.0<small>亿</small></div>
+      <div class="bar"><i style="width:40.3%"></i></div></div>
+
+    <div class="row"><div class="pos">14</div>
+      <div class="name">骨质疏松<em>40 岁以上；男 5.0%、女 20.6%</em></div>
+      <div class="val">≈1.0<small>亿</small></div>
+      <div class="bar"><i style="width:40.3%"></i></div></div>
+  </div>
+
+  <div class="tier"><span class="lab">TIER 3</span><span class="txt">千万级及以下：高致残、高致死</span><span class="rng">&lt; 1 亿</span></div>
+  <div class="rank">
+    <div class="row"><div class="pos">15</div>
+      <div class="name">乙型肝炎病毒感染<em>HBsAg 阳性者存量，是全球最大的单一国家存量</em></div>
+      <div class="val">8600<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:100%"></i></div></div>
+
+    <div class="row"><div class="pos">16</div>
+      <div class="name">焦虑障碍<em>成人 12 个月患病率 4.1%</em></div>
+      <div class="val">5781<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:67.2%"></i></div></div>
+
+    <div class="row"><div class="pos">17</div>
+      <div class="name">抑郁障碍<em>成人 12 个月患病率 3.4%</em></div>
+      <div class="val">4794<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:55.7%"></i></div></div>
+
+    <div class="row"><div class="pos">18</div>
+      <div class="name">下肢动脉疾病<em>外周动脉粥样硬化</em></div>
+      <div class="val">4530<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:52.7%"></i></div></div>
+
+    <div class="row"><div class="pos">19</div>
+      <div class="name">脑卒中<em>现患；年新发约 200 万，成人致死致残首位病因</em></div>
+      <div class="val">1300<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:15.1%"></i></div></div>
+
+    <div class="row"><div class="pos">20</div>
+      <div class="name">冠心病<em>现患</em></div>
+      <div class="val">1139<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:13.2%"></i></div></div>
+
+    <div class="row"><div class="pos">21</div>
+      <div class="name">心力衰竭<em>现患，呈年轻化趋势</em></div>
+      <div class="val">890<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:10.3%"></i></div></div>
+
+    <div class="row"><div class="pos">22</div>
+      <div class="name">心房颤动<em>现患</em></div>
+      <div class="val">487<small>万</small></div>
+      <div class="bar"><i class="amber" style="width:5.7%"></i></div></div>
+  </div>
+
+  <div class="legend">
+    <span>■ 红 = 覆盖极广、致死性低</span>
+    <span>■ 蓝/灰 = 高致死或高致残但人数相对少</span>
+    <span>※ 同一患者可计入多种疾病，各行不可相加</span>
+  </div>
+
+  <div class="call">
+    <div class="hd">这张榜最容易读错的一点</div>
+    <p>脑卒中只有 1300 万现患，看起来“不如过敏性鼻炎严重”，但它是<b>中国成人致死、致残的第一位病因</b>，中国卒中死亡数约占全球的三分之一。人数少 ≠ 负担轻。</p>
+  </div>
+</section>
+
+<!-- ======================= 5. 中国死亡 ======================= -->
+<section id="cdeath">
+  <h2><span class="num">05</span>中国：按死亡排（死因顺位）</h2>
+  <p class="sub">与患病榜完全不重叠。中国居民死因前五位占全部死亡的八成以上，慢病占总死亡 88% 左右。</p>
+
+  <div class="rank">
+    <div class="row head"><div class="pos">#</div><div>死因</div><div class="val" style="text-align:right">占死亡</div><div>量级</div></div>
+    <div class="row"><div class="pos top">1</div><div class="name">恶性肿瘤<em>年新发 482.5 万例、死亡 257.4 万例（2022 年）</em></div><div class="val">≈25<small>%</small></div><div class="bar"><i class="red" style="width:100%"></i></div></div>
+    <div class="row"><div class="pos top">2</div><div class="name">心脏病<em>含冠心病、心梗、高血压性心脏病等</em></div><div class="val">≈23<small>%</small></div><div class="bar"><i class="red" style="width:92%"></i></div></div>
+    <div class="row"><div class="pos top">3</div><div class="name">脑血管病<em>卒中为主；农村标化死亡率长期高于城市</em></div><div class="val">≈21<small>%</small></div><div class="bar"><i class="red" style="width:84%"></i></div></div>
+    <div class="row"><div class="pos">4</div><div class="name">呼吸系统疾病<em>COPD 为主</em></div><div class="val">≈9<small>%</small></div><div class="bar"><i style="width:36%"></i></div></div>
+    <div class="row"><div class="pos">5</div><div class="name">损伤和中毒<em>交通伤害、跌倒、中毒等</em></div><div class="val">≈6<small>%</small></div><div class="bar"><i style="width:24%"></i></div></div>
+  </div>
+
+  <p style="margin-top:20px">心血管病一项就占农村死因 48.98%、城市 47.35%——<b>每 5 例死亡中有 2 例死于心血管病</b>。注意这与“心脏病第 2、脑血管病第 3”并不矛盾：前者是心血管病大类合计，后者是单项死因顺位。</p>
+
+  <div class="call">
+    <div class="hd">同一个“心血管病”，两个差 2.5 倍的数字</div>
+    <p>《中国心血管健康与疾病报告 2025》同时给出了两个数：<b>3.3 亿</b>（国家心血管病中心口径，含高血压 2.45 亿、卒中 1300 万、冠心病 1139 万、心衰 890 万、房颤 487 万、下肢动脉疾病 4530 万等的合计）和 <b>1.338 亿</b>（GBD 口径，1990 年 5236 万 → 2021 年 13385 万，+155.60%）。</p>
+    <p>差在哪：<b>GBD 把高血压当成“风险因素”而非“疾病”</b>，所以不计入心血管病患病数。两个数都正确，但混用就会得出“中国心血管病人数五年翻倍”这类错误结论。引用时必须写明是哪一套口径。</p>
+  </div>
+</section>
+
+<!-- ======================= 6. 省域 ======================= -->
+<section id="province">
+  <h2><span class="num">06</span>再往下切：省域差异有多大</h2>
+  <p class="sub">省际差异不是小数点后的差别。<b>糖尿病患病率最高省与最低省相差 7 倍以上</b>，而且“高血压高发区”和“糖尿病高发区”不是同一批省份。</p>
+
+  <h3>6.1 糖尿病：31 个省级行政区年龄标化患病率（2023）</h3>
+  <p style="font-size:13.5px;color:var(--ink-3);margin-bottom:12px">中国疾控中心慢病中心周脉耕团队，基于 GBD 2023 方法，发表于 <i>Military Medical Research</i>（2025）。全国 2.33 亿，年龄标化患病率 13.67%。</p>
+
+  <div class="prov">
+    <div><span class="r">1</span><div class="pname">北京</div><div class="pval" style="color:#8c2f22">28.45</div></div>
+    <div><span class="r">2</span><div class="pname">天津</div><div class="pval" style="color:#8c2f22">25.78</div></div>
+    <div><span class="r">3</span><div class="pname">上海</div><div class="pval" style="color:#9b3a2b">22.04</div></div>
+    <div><span class="r">4</span><div class="pname">浙江</div><div class="pval" style="color:#a84a37">17.72</div></div>
+    <div><span class="r">5</span><div class="pname">福建</div><div class="pval" style="color:#ad523c">16.64</div></div>
+    <div><span class="r">6</span><div class="pname">新疆</div><div class="pval" style="color:#ad553e">16.56</div></div>
+    <div><span class="r">7</span><div class="pname">江苏</div><div class="pval" style="color:#b05a41">16.35</div></div>
+    <div><span class="r">8</span><div class="pname">吉林</div><div class="pval" style="color:#b26045">16.03</div></div>
+    <div><span class="r">9</span><div class="pname">辽宁</div><div class="pval" style="color:#b56a4c">15.52</div></div>
+    <div><span class="r">10</span><div class="pname">重庆</div><div class="pval" style="color:#b56b4d">15.51</div></div>
+    <div><span class="r">11</span><div class="pname">黑龙江</div><div class="pval" style="color:#b76d4f">15.43</div></div>
+    <div><span class="r">12</span><div class="pname">安徽</div><div class="pval" style="color:#b76e50">15.42</div></div>
+    <div><span class="r">13</span><div class="pname">山西</div><div class="pval" style="color:#b87354">15.31</div></div>
+    <div><span class="r">14</span><div class="pname">河北</div><div class="pval" style="color:#bc8361">14.55</div></div>
+    <div><span class="r">15</span><div class="pname">河南</div><div class="pval" style="color:#bd8765">14.33</div></div>
+    <div><span class="r">16</span><div class="pname">四川</div><div class="pval" style="color:#bf8c69">14.07</div></div>
+    <div><span class="r">17</span><div class="pname">内蒙古</div><div class="pval" style="color:#8f8a70">12.58</div></div>
+    <div><span class="r">18</span><div class="pname">湖北</div><div class="pval" style="color:#8b8a74">12.03</div></div>
+    <div><span class="r">19</span><div class="pname">广东</div><div class="pval" style="color:#868a78">11.68</div></div>
+    <div><span class="r">20</span><div class="pname">陕西</div><div class="pval" style="color:#7d8a7c">11.11</div></div>
+    <div><span class="r">21</span><div class="pname">山东</div><div class="pval" style="color:#798a7e">10.93</div></div>
+    <div><span class="r">22</span><div class="pname">宁夏</div><div class="pval" style="color:#788a7f">10.89</div></div>
+    <div><span class="r">23</span><div class="pname">海南</div><div class="pval" style="color:#728a81">10.34</div></div>
+    <div><span class="r">24</span><div class="pname">江西</div><div class="pval" style="color:#6e8a83">10.19</div></div>
+    <div><span class="r">25</span><div class="pname">湖南</div><div class="pval" style="color:#6d8a84">10.09</div></div>
+    <div><span class="r">26</span><div class="pname">青海</div><div class="pval" style="color:#4a7a72">9.70</div></div>
+    <div><span class="r">27</span><div class="pname">云南</div><div class="pval" style="color:#477a74">9.13</div></div>
+    <div><span class="r">28</span><div class="pname">甘肃</div><div class="pval" style="color:#3f7a78">8.19</div></div>
+    <div><span class="r">29</span><div class="pname">贵州</div><div class="pval" style="color:#3a7a7b">7.57</div></div>
+    <div><span class="r">30</span><div class="pname">广西</div><div class="pval" style="color:#377a7d">7.23</div></div>
+    <div><span class="r">31</span><div class="pname">西藏</div><div class="pval" style="color:#2c4a5e">3.93</div></div>
+  </div>
+
+  <p style="margin-top:16px;font-size:13.5px">区域格局：<b>华北 17.20% &gt; 东北 15.62% &gt; 华东 14.86%</b> &gt; 华中 &gt; 华南 &gt; 西南 &gt; 西北。经济发展水平（HDI 最高组 16.33% vs 最低组 8.10%）与患病率正相关，但西南地区增速最快（AAPC 4.12）。</p>
+
+  <h3>6.2 高血压：省级加权患病率（2012–2015 年中国高血压调查）</h3>
+  <p style="font-size:13.5px;color:var(--ink-3);margin-bottom:12px">全国 18 岁以上加权患病率 23.2%（粗率 27.9%），患病人数 2.45 亿。数据来自 31 省 45 万人的抽样调查，是目前唯一完整的省级高血压图谱。</p>
+
+  <div class="rank">
+    <div class="row"><div class="pos">1</div><div class="name">北京</div><div class="val">35.9<small>%</small></div><div class="bar"><i class="red" style="width:100%"></i></div></div>
+    <div class="row"><div class="pos">2</div><div class="name">天津</div><div class="val">34.5<small>%</small></div><div class="bar"><i class="red" style="width:96.1%"></i></div></div>
+    <div class="row"><div class="pos">3</div><div class="name">上海</div><div class="val">29.1<small>%</small></div><div class="bar"><i class="red" style="width:81.1%"></i></div></div>
+    <div class="row"><div class="pos">4</div><div class="name">辽宁 / 云南</div><div class="val">28.4<small>%</small></div><div class="bar"><i class="red" style="width:79.1%"></i></div></div>
+    <div class="row"><div class="pos">6</div><div class="name">广东</div><div class="val">27.3<small>%</small></div><div class="bar"><i style="width:76%"></i></div></div>
+    <div class="row"><div class="pos">7</div><div class="name">黑龙江</div><div class="val">26.4<small>%</small></div><div class="bar"><i style="width:73.5%"></i></div></div>
+    <div class="row"><div class="pos">8</div><div class="name">吉林 / 山西</div><div class="val">26.2 / 26.0<small>%</small></div><div class="bar"><i style="width:72.4%"></i></div></div>
+    <div class="row"><div class="pos">10</div><div class="name">江苏 / 西藏</div><div class="val">25.3 / 25.0<small>%</small></div><div class="bar"><i style="width:69.6%"></i></div></div>
+    <div class="row"><div class="pos">12</div><div class="name">河南</div><div class="val">24.1<small>%</small></div><div class="bar"><i style="width:67.1%"></i></div></div>
+    <div class="row"><div class="pos">13</div><div class="name">福建 / 四川 / 贵州</div><div class="val">23.9 / 23.6<small>%</small></div><div class="bar"><i style="width:65.7%"></i></div></div>
+    <div class="row"><div class="pos">16</div><div class="name">河北</div><div class="val">23.3<small>%</small></div><div class="bar"><i style="width:64.9%"></i></div></div>
+    <div class="row"><div class="pos">17</div><div class="name">浙江</div><div class="val">23.2<small>%</small></div><div class="bar"><i style="width:64.6%"></i></div></div>
+    <div class="row"><div class="pos">18</div><div class="name">宁夏 / 山东 / 陕西</div><div class="val">22.1 / 22.0<small>%</small></div><div class="bar"><i style="width:61.6%"></i></div></div>
+    <div class="row"><div class="pos">21</div><div class="name">甘肃 / 重庆 / 安徽</div><div class="val">20.7–20.5<small>%</small></div><div class="bar"><i style="width:57.7%"></i></div></div>
+    <div class="row"><div class="pos">—</div><div class="name">湖南（全国最低）</div><div class="val">15.6<small>%</small></div><div class="bar"><i class="soft" style="width:43.5%"></i></div></div>
+  </div>
+  <p style="font-size:12px;color:var(--ink-3);margin-top:10px">注：原报告按“第一/二/三梯队”分组披露，本表列出已公开的具体数值省份；内蒙古、湖北、广西、海南、青海、新疆、江西的加权值未在概要中单列。</p>
+
+  <div class="call">
+    <div class="hd">省域对比里最值得注意的一件事</div>
+    <p>北京同时拿下两张省级榜的第一（高血压 35.9%、糖尿病 28.45%），符合“大城市+老龄化+筛查充分”的解释。<b>但河北的排序是反的</b>：高血压 23.3%（偏低），糖尿病 14.55%（偏高）。</p>
+    <p>原因很可能是<b>检出率差异</b>而非真实患病率差异——糖尿病需要血糖检测才能发现，高血压只需一个血压计。凡是依赖“主动筛查”才能确诊的病（糖尿病、慢性肾病、COPD、脂肪肝），其省际排行里都混着<b>医疗可及性</b>的影响，不能直接当流行病学事实读。</p>
+  </div>
+
+  <div class="call">
+    <div class="hd">再小一级：市/县层面几乎没有公开的横向可比数据</div>
+    <p>中国目前没有覆盖全部地市的疾病患病率公开数据库。可用的替代口径有三类：① <b>死因监测点</b>（全国 605 个监测县区，可按死因顺位比较）；② <b>国家卫生服务调查</b>的“两周患病率/慢性病患病率”（最近一次为 2018 年第六次）；③ <b>地方疾控年度报告</b>（仅个别城市公开发布）。</p>
+    <p>如果要做市级对比，现实路径是用死因监测数据而非患病率——市级患病率数据不存在，任何声称有的来源都值得怀疑。</p>
+  </div>
+</section>
+
+<!-- ======================= 7. 陷阱 ======================= -->
+<section id="traps">
+  <h2><span class="num">07</span>五个几乎所有人都会踩的坑</h2>
+
+  <ul class="pts">
+    <li><b>把“心血管病”和“心脏病”当成一回事。</b>心血管病 3.3 亿是含高血压的大类合计，心脏病是死因顺位里的单项。两个数字常被并列使用，逻辑上是包含关系。</li>
+    <li><b>把不同年份的数字并排比较。</b>高血压 2.45 亿来自 2012–2015 年调查、沿用至今；糖尿病 2.33 亿是 2023 年；COPD“近 1 亿”是 2018 年肺功能筛查结果。三者不在同一年份，不能算增幅。</li>
+    <li><b>把不同定义的数字并排比较。</b>COPD：GBD 2023 给中国 5250 万，中国自己的流调给近 1 亿。差异来自肺功能诊断标准与症状定义的取舍，不是谁算错了。</li>
+    <li><b>把“检出率”当成“患病率”。</b>甲状腺结节“患病率 32.4%”是超声筛查检出率；把超声探头放到任何人脖子上都会查出东西。这类数字放进疾病排行会严重失真。</li>
+    <li><b>把各行数字相加算“总患病人数”。</b>一个人可以同时有高血压、糖尿病和脂肪肝。多病共存在中国 60 岁以上人群中是常态（75.8% 至少患 1 种慢病），任何合计都会重复计数。</li>
+  </ul>
+</section>
+
+<!-- ======================= 8. 版本 ======================= -->
+<section id="freshness">
+  <h2><span class="num">08</span>这些数字多久更新一次</h2>
+  <p class="sub">“为什么是 2023 年”的答案是：<b>2023 版就是当前最新版</b>。流行病学数据有一条很长的管道——监测采样 → 死因登记 → 建模 → 同行评审 → 正式发布，每一环一到三年。所以“最新可用数据”永远比“当前年份”晚 2–3 年，这不是检索不够勤，是数据的物理延迟。</p>
+
+  <table class="src">
+    <thead><tr><th>数据源</th><th>最新可用版本</th><th>实际数据年份</th><th>更新周期</th><th>下次预计</th></tr></thead>
+    <tbody>
+      <tr><td>GBD（IHME）</td><td><b>GBD 2023</b></td><td>2023</td><td>约 2 年</td><td class="q">2027-02（OWID 标注）</td></tr>
+      <tr><td>WHO Global Health Estimates</td><td><b>GHE 2023</b></td><td>2023</td><td>年度</td><td class="q">2027-10</td></tr>
+      <tr><td>中国心血管健康与疾病报告</td><td><b>2025 版</b></td><td>患病 2021 / 危险因素 2024</td><td>年度</td><td class="q">2027 年中</td></tr>
+      <tr><td>中国糖尿病地图（CDC 慢病中心）</td><td><b>2025 研究</b></td><td>2023</td><td>不定期</td><td class="q">未定</td></tr>
+      <tr><td>国家癌症中心肿瘤登记</td><td><b>2022 年数据</b>（2024 发表）</td><td>2022</td><td>约 2 年</td><td class="q">2027</td></tr>
+      <tr><td>中国高血压调查（CHS）</td><td><b>2012–2015</b></td><td>2015</td><td>十余年一次</td><td class="q">未启动新一轮</td></tr>
+      <tr><td>全国口腔健康流行病学调查</td><td><b>第四次（2015–2017）</b></td><td>2017</td><td>约 10 年</td><td class="q">第五次未启动</td></tr>
+      <tr><td>中国精神卫生调查</td><td><b>2019</b></td><td>2019</td><td>十余年一次</td><td class="q">未启动</td></tr>
+      <tr><td>中国居民营养与慢性病状况报告</td><td><b>2020 版</b></td><td>2018–2019</td><td>约 5 年</td><td class="q">2025 版流传数据存疑</td></tr>
+    </tbody>
+  </table>
+
+  <div class="call" style="border-left-color:var(--accent)">
+    <div class="hd">一处该更新的，我已经改了</div>
+    <p>初版我引的是《中国心血管健康与疾病报告 2024》，但 <b>2025 版已于 2026 年 6 月发布</b>（王增武、刘明波解读，载《中国预防医学杂志》2026 年第 9 期）。现已全部替换为 2025 版数据，并补上了它暴露出的 3.3 亿 / 1.338 亿双口径问题。</p>
+  </div>
+
+  <div class="call">
+    <div class="hd">一处流传很广的“新数据”，我没有采用</div>
+    <p>网上大量文章引用《中国居民营养与慢性病状况报告（2025 年）》，给出“高血压 27.9%、高血糖 35.2%、高血脂 34.7%”。我追溯了来源链：<b>唯一出口是一篇 2026 年 1 月的自媒体科普文</b>，国家卫健委官网查不到该版本发布记录，且这几组数字与 2020 版几乎完全重合（2020 版为高血压 27.5%、糖尿病 11.9%、血脂异常 35.6%）。</p>
+    <p>更可疑的是同一批文章里“高血压 27.5%”和“27.9%”两个版本同时流传——真实的官方报告不会自相矛盾。这类数字一旦被引用进模型，会污染整个下游分析，所以本页继续用 2020 版 + 心血管报告 2025 的组合。</p>
+    <p>癌症数据同理：官方口径是 <b>2022 年新发 482.47 万、死亡 257.42 万</b>（2024 年 JNCC 发表）。网上另有“406 万”“515 万”等版本，均为二手转引且彼此冲突，未采用。</p>
+  </div>
+
+  <div class="call">
+    <div class="hd">如果你要自己维护这张表，建议的刷新节奏</div>
+    <p><b>每年 10 月</b>查 WHO GHE 与 GBD 官网（两家都在秋季发布）；<b>每年 6–7 月</b>查中国心血管健康与疾病报告；<b>每 2 年</b>查国家癌症中心登记数据；省级高血压、口腔、精神障碍这三类十年才动一次，查一次可以用很久。</p>
+    <p>真正需要每月盯的不是患病率，而是<b>死因监测月报</b>和<b>医保结算病种结构</b>——这两个是高频更新的，也是判断趋势拐点的地方。</p>
+  </div>
+</section>
+
+<!-- ======================= 9. 来源 ======================= -->
+<section id="sources">
+  <h2><span class="num">09</span>数据来源</h2>
+  <p class="sub">每一条数字都可回溯到下列来源。可靠度标记：<span class="st">★★★</span> 官方统计/大样本实测 · <span class="st">★★<i>★</i></span> 权威研究建模估计 · <span class="st">★<i>★★</i></span> 推算或二手转引。</p>
+
+  <table class="src">
+    <thead><tr><th>#</th><th>来源</th><th>发布方 / 年份</th><th>用于本页的数据</th><th>可靠度</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td>
+        <td><a href="https://www.healthdata.org/announcing-launch-gbd-2023-study-results" target="_blank">GBD 2023（Global Burden of Disease Study 2023）</a>，三篇 capstone 论文载于 <i>The Lancet</i></td>
+        <td class="q">IHME / 2025-10-12</td>
+        <td>全球 375 种疾病负担、患病与死亡排序、DALY 前十</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">2</td>
+        <td><a href="https://www.healthdata.org/news-events/newsroom/news-releases/headache-disorders-affect-3-billion-people-worldwide-nearly-one" target="_blank">GBD 2023 Headache Collaborators，<i>Lancet Neurology</i> 2025</a></td>
+        <td class="q">IHME + NTNU / 2025-11</td>
+        <td>头痛障碍 29 亿（年龄标化 34.6%）、偏头痛 11 亿、YLD 4580 万</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">3</td>
+        <td>GBD 2023 口腔健康专题（GOHAP 进展评估）</td>
+        <td class="q">2025</td>
+        <td>全球口腔疾病 37.3 亿（2019 年 36.2 亿）</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">4</td>
+        <td><a href="https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death" target="_blank">WHO Global Health Estimates 2023</a></td>
+        <td class="q">WHO / 2026-10-02</td>
+        <td>全球十大死因及死亡数（IHD 950 万、卒中 680 万、COPD 360 万…）、全球死亡 6100 万</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">5</td>
+        <td><a href="https://www.who.int/features/factfiles/deafness/zh/" target="_blank">WHO 世界听力报告 / 耳聋事实清单</a></td>
+        <td class="q">WHO / 2021–2024</td>
+        <td>全球听力损失 15 亿、致残性 4.3 亿</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">6</td>
+        <td>WHO《世界视力报告》</td>
+        <td class="q">WHO / 2019</td>
+        <td>全球视力损害或失明 ≥22 亿</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">7</td>
+        <td>GBD 2023 精神障碍专题（<i>The Lancet</i> 2026-05-21）</td>
+        <td class="q">UQ + IHME / 2026</td>
+        <td>全球精神障碍 11.7 亿、占 YLD 17.3%、DALY 1.71 亿</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">8</td>
+        <td>IDF《全球糖尿病地图》第 11 版</td>
+        <td class="q">国际糖尿病联盟 / 2025</td>
+        <td>全球 20–79 岁糖尿病 5.89 亿，43% 未确诊</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">9</td>
+        <td>WHO 高血压事实清单</td>
+        <td class="q">WHO / 2023</td>
+        <td>全球 30–79 岁高血压 14 亿</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">10</td>
+        <td>GBD 2020 下背痛专题（<i>Lancet Rheumatology</i> 2023）</td>
+        <td class="q">2023</td>
+        <td>全球下背痛 6.19 亿</td><td class="st">★★<i>★</i></td></tr>
+
+      <tr><td class="n">11</td>
+        <td><a href="https://www.nccd.org.cn/" target="_blank">《中国心血管健康与疾病报告 2025》</a>，国家心血管病中心；解读见王增武、刘明波，《中国预防医学杂志》2026 年第 9 期</td>
+        <td class="q">国家心血管病中心 / 2026-06</td>
+        <td>心血管病 3.3 亿（含高血压）、GBD 口径 1.338 亿、高血压 2.45 亿、卒中 1300 万、冠心病 1139 万、心衰 890 万、房颤 487 万、下肢动脉疾病 4530 万、高血压患病率 31.6%、控制率 12.9%、糖尿病患病率 12.4%、血脂异常 38.1%、超重 34.6%／肥胖 17.8%</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">12</td>
+        <td><a href="https://mmrjournal.biomedcentral.com/" target="_blank">《中国全国及省级糖尿病患病率与非致命负担，2005–2023，2050 预测》，<i>Military Medical Research</i> 2025;12:28</a></td>
+        <td class="q">中国疾控中心慢病中心 周脉耕等 / 2025-06</td>
+        <td>中国糖尿病 2.33 亿、年龄标化 13.67%、31 省完整患病率、区域格局</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">13</td>
+        <td>《中国高血压调查（CHS 2012–2015）》，<i>Circulation</i> 2018；省级数据见《中国心血管病报告 2018》表 2-1-2</td>
+        <td class="q">高润霖、王增武等 / 2018</td>
+        <td>省级高血压加权患病率、全国 23.2%、高血压前期 4.35 亿</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">14</td>
+        <td>《第四次全国口腔健康流行病学调查报告》</td>
+        <td class="q">国家卫健委 / 2015–2017</td>
+        <td>35–44 岁牙周健康率 9.1%、龋患率 89.0%</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">15</td>
+        <td>Wang C, et al. <i>The Lancet</i> 2018（中国成人肺部健康研究）</td>
+        <td class="q">2018</td>
+        <td>中国 20 岁以上 COPD 9990 万、40 岁以上患病率 13.7%</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">16</td>
+        <td>Huang Y, et al. <i>Lancet Psychiatry</i> 2019（中国精神卫生调查）</td>
+        <td class="q">2019</td>
+        <td>焦虑障碍 4.1%（5781 万）、抑郁障碍 3.4%（4794 万）</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">17</td>
+        <td>Han B, et al. <i>Journal of the National Cancer Center</i> 2024（中国 2022 年癌症统计）</td>
+        <td class="q">国家癌症中心 / 2024</td>
+        <td>年新发 482.47 万、死亡 257.42 万</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">18</td>
+        <td>GBD 2023 中国听力损失负担分析（CNKI 收录，2026）</td>
+        <td class="q">2026</td>
+        <td>中国听力损失 4.84 亿、DALY 1413 万年、21.6% 归因职业噪声</td><td class="st">★★<i>★</i></td></tr>
+
+      <tr><td class="n">19</td>
+        <td><a href="https://weekly.chinacdc.cn/" target="_blank">中国 CDC Weekly：中国 60 岁以上人群死亡与伤残负担 1990–2023</a></td>
+        <td class="q">中国疾控中心 / 2025-12</td>
+        <td>老年人群死因与 YLD 排序、痴呆死亡率 AAPC 1.76</td><td class="st">★★★</td></tr>
+
+      <tr><td class="n">20</td>
+        <td>《中国眼健康白皮书》、国家卫健委近视防控发布会</td>
+        <td class="q">国家卫健委 / 2020</td>
+        <td>儿童青少年总体近视率 52.7%；全人群近视数为推算</td><td class="st">★<i>★★</i></td></tr>
+
+      <tr><td class="n">21</td>
+        <td>《中国幽门螺杆菌感染防控》白皮书</td>
+        <td class="q">2023</td>
+        <td>感染率约 44%</td><td class="st">★★<i>★</i></td></tr>
+    </tbody>
+  </table>
+
+  <div class="call" style="margin-top:34px">
+    <div class="hd">本页的局限，需要说清楚</div>
+    <p><b>① 部分中国数字为不同年份拼接</b>，高血压 2.45 亿（2012–2015 调查）、糖尿病 2.33 亿（2023）、COPD 近 1 亿（2018）不在同一年，跨病种比较只能看量级不能看精确排序。</p>
+    <p><b>② 口腔疾病、近视、幽门螺杆菌的中国数字含推算成分</b>，已在表中标注为 ★ 级；“≈10 亿”是按成人牙周问题检出率 90.9% 乘成年人口得到的量级估计，不是直接调查结果。</p>
+    <p><b>③ 癌症现患人数未列入</b>：中国癌症五年生存率 43.2%、年新发 482 万，现患存量应在 2000 万量级，但官方未直接发布该数字，故不列为正式排序项。</p>
+    <p><b>④ 市级患病率数据不存在</b>。如需更细粒度，只能用死因监测或两周患病率口径，两者与患病率不可直接换算。</p>
+  </div>
+</section>
+<!-- ======================= 10. 数据下载 ======================= -->
+<section id="data">
+  <h2><span class="num">10</span>原始数据下载</h2>
+  <p class="sub">本页所有数字已导出为结构化文件，可直接拿去分析。CSV 使用 UTF-8 BOM 编码，Excel 双击打开不乱码；<code>sources.json</code> 带每条来源的链接与可靠度分级，便于交叉核验。</p>
+
+  <table class="src">
+    <thead><tr><th>文件</th><th>内容</th><th style="text-align:right">行数</th><th style="text-align:right">体积</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="fn"><a href="data/global_prevalence_2023.csv" download>global_prevalence_2023.csv</a></td>
+        <td>全球 · 按现患人数排序（2023）</td>
+        <td class="rows">9</td>
+        <td class="sz">731 B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/global_deaths_2023.csv" download>global_deaths_2023.csv</a></td>
+        <td>全球 · 按死亡人数排序（2023）</td>
+        <td class="rows">10</td>
+        <td class="sz">720 B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/china_prevalence.csv" download>china_prevalence.csv</a></td>
+        <td>中国 · 按患病人数排序（分三层）</td>
+        <td class="rows">22</td>
+        <td class="sz">1.7K B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/china_deaths.csv" download>china_deaths.csv</a></td>
+        <td>中国 · 死因顺位（占比）</td>
+        <td class="rows">5</td>
+        <td class="sz">369 B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/province_diabetes_2023.csv" download>province_diabetes_2023.csv</a></td>
+        <td>省域 · 糖尿病年龄标化患病率（31 省）</td>
+        <td class="rows">31</td>
+        <td class="sz">568 B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/province_hypertension_2012_2015.csv" download>province_hypertension_2012_2015.csv</a></td>
+        <td>省域 · 高血压加权患病率（14 组）</td>
+        <td class="rows">14</td>
+        <td class="sz">392 B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/sources.csv" download>sources.csv</a></td>
+        <td>来源清单（含可靠度分级）</td>
+        <td class="rows">21</td>
+        <td class="sz">3.9K B</td></tr>
+      <tr>
+        <td class="fn"><a href="data/sources.json" download>sources.json</a></td>
+        <td>来源清单 JSON（含链接、结构化）</td>
+        <td class="rows">21</td>
+        <td class="sz">6.6K B</td></tr>
+    </tbody>
+  </table>
+
+  <div class="call" style="margin-top:30px">
+    <div class="hd">怎么用这些数据</div>
+    <p><b>跨病种比较只看量级</b>：中国各组数字来自不同年份、不同调查，不要计算增速或做精确排序。</p>
+    <p><b>省域排行混着检出率</b>：凡需主动筛查才能确诊的病（糖尿病、慢性肾病、COPD、脂肪肝），省际差异含医疗可及性成分，不能直接当流行病学事实。</p>
+    <p><b>引用时连同年份与口径一起引</b>：例如“高血压 2.45 亿（2012–2015 中国高血压调查，≥18 岁加权患病率 23.2%）”，只引数字会被误读。</p>
+  </div>
+</section>
+
+<footer>
+  <b>引用建议</b>　全球数值优先引 GBD 2023 与 WHO GHE 2023（同一体系、可交叉验证）；中国数值优先引国家心血管病中心年度报告、中国疾控中心慢病中心专题研究、国家癌症中心统计，这三类是唯一具备连续监测基础的来源。媒体转引的“我国 XX 病患者 X 亿”多数没有原始出处，不宜作为引用依据。
+  <br><br>
+  本页仅作数据梳理，不构成任何医疗建议。统计口径差异导致的数字冲突已在正文标注，引用时请连同年份与口径一并引述。
+</footer>
+
+</div>
+</body>
+</html>
